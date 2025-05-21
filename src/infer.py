@@ -3,6 +3,7 @@ import json
 import argparse
 import os
 import sys
+import re
 
 class SentimentClassifier(torch.nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, bidirectional=True):
@@ -63,14 +64,17 @@ def load_model_and_vocab():
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 
     # Load model state
-    model.load_state_dict(torch.load('data/processed/sentiment_model.pt', map_location=device))
+    model.load_state_dict(torch.load('data/processed/sentiment_model.pt', map_location=device, weights_only=True))
     model = model.to(device)
     model.eval()
 
     return model, vocab, device
 
-def predict_sentiment(text, model, vocab, device, max_len=50):
+def predict_sentiment(text, model, vocab, device, max_len=100):  # Changed max_len from 50 to 100
     """Predict sentiment for a given text"""
+    # Preprocess text (same as in training)
+    text = preprocess_text(text)
+
     # Tokenize
     tokens = [vocab.get(word, 1) for word in text.lower().split()]
 
@@ -99,6 +103,23 @@ def predict_sentiment(text, model, vocab, device, max_len=50):
         "confidence": confidence,
         "class": pred_class
     }
+
+# Add the preprocess_text function from train.py
+def preprocess_text(text):
+    # Convert to lowercase
+    text = text.lower()
+
+    # Remove HTML tags
+    text = re.sub(r'<.*?>', '', text)
+
+    # Remove special characters and digits
+    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'\d+', '', text)
+
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    return text
 
 def interactive_mode():
     """Run an interactive loop for sentiment analysis"""

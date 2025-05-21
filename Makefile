@@ -1,15 +1,15 @@
 .PHONY: default train infer interactive
 
-default: interactive
+default: train interactive
 
 train:
-	conda activate pytorch && \
 	python src/train.py
 
 infer:
-	conda activate pytorch && \
-	python src/infer.py
+	python src/infer.py --text "I really enjoyed this movie, it was amazing!"
 
 interactive:
-	conda activate pytorch && \
 	python src/infer.py --interactive
+
+huggingface:
+	python src/hf.py --interactive
